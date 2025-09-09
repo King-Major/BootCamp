@@ -1,5 +1,4 @@
 // routes/registration.js
-
 const express = require('express');
 const QRCode = require('qrcode');
 const Registration = require('../models/Registration');
@@ -13,8 +12,8 @@ router.post('/', async (req, res) => {
   // Validation
   if (!firstName || !lastName || !email || !dateOfBirth || !course || hasLaptop === null) {
     return res.status(400).json({ 
-      success: false, 
-      message: 'All required fields must be provided.' 
+      success: false,
+      message: 'All required fields must be provided.'
     });
   }
 
@@ -23,8 +22,8 @@ router.post('/', async (req, res) => {
     let existingRegistration = await Registration.findOne({ email });
     if (existingRegistration) {
       return res.status(400).json({ 
-        success: false, 
-        message: 'This email is already registered.' 
+        success: false,
+        message: 'This email is already registered.'
       });
     }
 
@@ -44,24 +43,50 @@ router.post('/', async (req, res) => {
 
     // --- START OF CHANGES ---
 
-    // 1. Construct full name
+    // 1. Construct full name with detailed logging
     const fullName = `${firstName} ${middleName ? middleName + ' ' : ''}${lastName}`.trim();
+    
+    // Debug: Log individual components
+    console.log('=== QR CODE DEBUG ===');
+    console.log('firstName:', firstName);
+    console.log('middleName:', middleName);
+    console.log('lastName:', lastName);
+    console.log('course:', course);
+    console.log('savedRegistration._id:', savedRegistration._id);
+    console.log('Constructed fullName:', fullName);
 
     // 2. Generate QR code data string with ID, name, and course
-    const qrData = `Registration ID: ${savedRegistration._id}\nName: ${fullName}\nCourse: ${savedRegistration.course}`;
+    const qrData = `Registration ID: ${savedRegistration._id}
+Name: ${fullName}
+Course: ${course}`;
 
-    // 3. Generate the QR code as a Buffer
-    const qrCodeBuffer = await QRCode.toBuffer(qrData);
+    console.log('QR Data being generated:');
+    console.log(qrData);
+    console.log('QR Data length:', qrData.length);
 
-    // 4. Convert buffer to Data URL (optional for storage)
+    // 3. Generate the QR code as a Buffer with simpler options
+    const qrCodeBuffer = await QRCode.toBuffer(qrData, {
+      errorCorrectionLevel: 'M',
+      type: 'png',
+      quality: 0.92,
+      margin: 2,
+      width: 256
+    });
+
+    console.log('QR Code Buffer generated, size:', qrCodeBuffer.length, 'bytes');
+
+    // 4. Convert buffer to Data URL for storage
     const qrCodeDataURL = `data:image/png;base64,${qrCodeBuffer.toString('base64')}`;
+    console.log('QR Code Data URL length:', qrCodeDataURL.length);
 
     // 5. Save QR code image to DB
     savedRegistration.qrCode = qrCodeDataURL;
     await savedRegistration.save();
+    console.log('QR Code saved to database');
 
     // 6. Send confirmation email with QR code
     await sendConfirmationEmail(email, fullName, qrCodeBuffer);
+    console.log('Confirmation email sent');
 
     // --- END OF CHANGES ---
 
@@ -79,8 +104,8 @@ router.post('/', async (req, res) => {
   } catch (error) {
     console.error('Registration Error:', error);
     res.status(500).json({ 
-      success: false, 
-      message: 'Server error. Please try again later.' 
+      success: false,
+      message: 'Server error. Please try again later.'
     });
   }
 });
