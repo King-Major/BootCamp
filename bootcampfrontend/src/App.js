@@ -96,7 +96,7 @@ const KingsCodeHero = () => {
       // setIsLoading(true);
 
       // Send data to backend
-      const response = await axios.post('http://localhost:5000/api/register', formData);
+      const response = await axios.post('https://bootcamp-yq8i.onrender.com/api/register', formData);
 
       if (response.data.success) {
         alert('Registration successful! Check your email for confirmation.');
