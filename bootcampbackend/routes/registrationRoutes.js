@@ -44,21 +44,23 @@ router.post('/', async (req, res) => {
 
     // --- START OF CHANGES ---
 
-    // 1. Generate QR code data string
-    const qrData = `Registration ID: ${savedRegistration._id}`;
+    // 1. Construct full name
+    const fullName = `${firstName} ${middleName ? middleName + ' ' : ''}${lastName}`.trim();
 
-    // 2. Generate the QR code as a Buffer for the email attachment
+    // 2. Generate QR code data string with ID, name, and course
+    const qrData = `Registration ID: ${savedRegistration._id}\nName: ${fullName}\nCourse: ${savedRegistration.course}`;
+
+    // 3. Generate the QR code as a Buffer
     const qrCodeBuffer = await QRCode.toBuffer(qrData);
 
-    // 3. Create a Data URL from the buffer to store in the database
+    // 4. Convert buffer to Data URL (optional for storage)
     const qrCodeDataURL = `data:image/png;base64,${qrCodeBuffer.toString('base64')}`;
 
-    // Update registration with the Data URL
+    // 5. Save QR code image to DB
     savedRegistration.qrCode = qrCodeDataURL;
     await savedRegistration.save();
 
-    // 4. Send the Buffer to the email function
-    const fullName = `${firstName} ${middleName ? middleName + ' ' : ''}${lastName}`;
+    // 6. Send confirmation email with QR code
     await sendConfirmationEmail(email, fullName, qrCodeBuffer);
 
     // --- END OF CHANGES ---
