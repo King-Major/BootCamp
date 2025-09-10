@@ -23,10 +23,12 @@ const sendConfirmationEmail = async (email, name, qrCodeBuffer) => {
     html: `
       <h2>Registration Confirmed!</h2>
       <p>Hi ${name},</p>
-      <p>Thank you for registering for our bootcamp. Your registration has been confirmed.</p>
+      <p>We Thank you for registering for our bootcamp. Your registration has been confirmed.</p>
+      <p><strong>Time:</strong> 3 PM on Thursday<br>
+      <strong>Venue:</strong> ICT Department, Faculty of Engineering.</p>
       <p>Please save the QR code below - you'll need it for check-in:</p>
       <img src="cid:qrcode" alt="Your QR Code" />
-      <p>Best regards,<br>Bootcamp Team</p>
+      <p>Best regards,<br>King's Code Academy Team</p>
     `,
     // 2. Add an attachments array with the QR code buffer
     attachments: [
