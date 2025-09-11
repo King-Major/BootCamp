@@ -51,13 +51,13 @@ const KingsCodeHero = () => {
       'BlockChain And Crypto Basics', 
       'Mobile App Development Basics With Glide',
       'Mobile PhotoGraphy Basics',
-      'Virtual Assistance Basics',
       'Content Creation Basics'
     ];
     const coursesWithoutLaptop = [
       'BlockChain And Crypto Basics', 
       'Mobile PhotoGraphy Basics',
-      'Content Creation Basics'
+      'Content Creation Basics',
+      'Virtual Assistance Basics'
     ];
 
     if (formData.hasLaptop === true) {
