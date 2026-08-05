@@ -198,7 +198,7 @@ const KingsCodeHero = () => {
               transition={{ duration: 0.8, delay: 0.3 }}
             >
               <p className="text-xl md:text-2xl text-gray-300 font-light max-w-4xl mx-auto leading-relaxed tracking-wide">
-                This bootcamp exists to give young men a vision — to see beyond their current reality and step into a future they can build.
+                This bootcamp exists to give young men a vision — to see beyond their current reality and step into a future they can build PART 2.
               </p>
             </motion.div>
 
