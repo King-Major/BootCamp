@@ -5,7 +5,7 @@ const cors = require('cors');
 
 dotenv.config();
 
-const registrationRoutes = require('./routes/registrationRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 const app = express();
 
@@ -26,7 +26,7 @@ app.get('/', (req, res) => {
   res.send('Bootcamp Registration API is running...');
 });
 
-app.use('/api/register', registrationRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Start Server
 const PORT = process.env.PORT || 5000;

@@ -33,12 +33,14 @@ const registrationSchema = new mongoose.Schema({
   course: {
     type: String,
     required: [true, 'Please select a course.'],
-    enum: ['Web Development Basics', 
-      'BlockChain And Crypto Basics', 
-      'Mobile App Development Basics With Glide',
-      'Mobile PhotoGraphy Basics',
+    enum: [
+      'Web Development Basics',
+      'Blockchain & Crypto Basics',
+      'Mobile App Development with Glide',
+      'Mobile Photography Basics',
       'Virtual Assistance Basics',
-      'Content Creation Basics'],
+      'Content Creation Basics',
+    ],
   },
   hasLaptop: {
     type: Boolean,
@@ -51,6 +53,18 @@ const registrationSchema = new mongoose.Schema({
   },
   qrCode: {
     type: String, // Will store the QR code data URL
+  },
+  paymentReference: {
+    type: String,
+    trim: true,
+    index: true,
+    unique: false,
+  },
+  amountPaid: {
+    type: Number,
+  },
+  paidAt: {
+    type: Date,
   },
   createdAt: {
     type: Date,

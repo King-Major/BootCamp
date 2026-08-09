@@ -1,70 +1,54 @@
-# Getting Started with Create React App
+# Payment integration — what's included and what you still need
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Files
+- `src/utils/paystack.js` — loads the Paystack inline script and opens the checkout popup.
+- `src/utils/api.js` — talks to your existing backend (`https://bootcamp-yq8i.onrender.com/api`).
+- `src/components/RegistrationModal.jsx` — the form (same fields/validation as before) plus the
+  register → initialize payment → open Paystack → verify → success flow.
+- `src/components/SuccessScreen.jsx` — shown once payment is verified.
+- `src/components/KingsCodeHero.jsx` — full page: Hero, Who it's for, Mission, Courses, final CTA.
 
-## Available Scripts
+## Frontend flow
+1. User fills the form → client-side validation (unchanged from your original code).
+2. `POST /api/register` — creates the student record. Must return `{ success, studentId }`.
+3. `POST /api/payment/initialize` — must return `{ success, reference, publicKey }`.
+   `reference` is the transaction reference your backend generated when it called
+   Paystack's `/transaction/initialize`. `publicKey` is your Paystack **public** key
+   (safe to expose — never send the secret key to the frontend).
+4. Paystack inline popup opens with that reference and amount (₦1,000 / 100000 kobo).
+5. On successful charge, the frontend calls `POST /api/payment/verify` with `{ reference }`.
+   Your backend should re-check the transaction against Paystack's
+   `/transaction/verify/:reference` endpoint (never trust the client-side callback alone)
+   and return `{ success, verified }`.
+6. Only once `verified: true` comes back does the UI show the success screen.
 
-In the project directory, you can run:
+## What you still need on the backend (Node/Express + Paystack secret key)
+```
+POST /api/payment/initialize
+  body: { email, studentId, amount }        // amount in kobo
+  -> calls Paystack POST https://api.paystack.co/transaction/initialize
+     with your PAYSTACK_SECRET_KEY
+  -> returns { success: true, reference, publicKey: PAYSTACK_PUBLIC_KEY }
 
-### `npm start`
+POST /api/payment/verify
+  body: { reference }
+  -> calls Paystack GET https://api.paystack.co/transaction/verify/:reference
+  -> confirms status === 'success' and amount matches 100000
+  -> marks the student's seat as paid in your database
+  -> returns { success: true, verified: true }
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+It's also worth adding a Paystack **webhook** endpoint
+(`POST /api/payment/webhook`) as a backup confirmation path, in case the user
+closes the tab right after paying and the verify call never fires from the browser.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Env / config
+- No Paystack keys live in the frontend except the public key, and even that comes
+  from your backend response rather than being hardcoded — so you can rotate it
+  without a redeploy.
+- Amount is defined once in `src/utils/paystack.js` (`REGISTRATION_FEE_NGN = 1000`).
 
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Not yet wired up
+- "Seats remaining" — `RegistrationModal` accepts a `seatsRemaining` prop and will
+  display it if you pass a number in from a real endpoint; it's left out by default
+  rather than showing a made-up count.
