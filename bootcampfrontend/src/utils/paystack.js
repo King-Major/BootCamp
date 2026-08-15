@@ -40,7 +40,7 @@ export const openPaystackCheckout = async ({ publicKey, reference, email, amount
       return reject(new Error('Paystack checkout is unavailable.'));
     }
 
-    PaystackPop.setup({
+    const popup = PaystackPop.setup({
       key: publicKey,
       email,
       amount,
@@ -54,5 +54,11 @@ export const openPaystackCheckout = async ({ publicKey, reference, email, amount
         resolve(response);
       },
     });
+
+    if (!popup || typeof popup.openIframe !== 'function') {
+      return reject(new Error('Paystack checkout popup could not be opened.'));
+    }
+
+    popup.openIframe();
   });
 };

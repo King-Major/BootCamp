@@ -1,4 +1,16 @@
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '';
+const getApiBaseUrl = () => {
+  if (process.env.REACT_APP_API_BASE_URL) {
+    return process.env.REACT_APP_API_BASE_URL;
+  }
+
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return 'http://localhost:5000';
+  }
+
+  return '';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 async function apiFetch(path, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {

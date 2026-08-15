@@ -1,9 +1,10 @@
 const express = require('express');
+const path = require('path');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const cors = require('cors');
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const paymentRoutes = require('./routes/paymentRoutes');
 
