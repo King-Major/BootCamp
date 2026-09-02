@@ -680,6 +680,10 @@ const RegistrationModal = ({ open, onClose }) => {
         hasLaptop: hasLaptop === "yes",
       });
 
+      if (!initResponse || !initResponse.publicKey || !initResponse.reference || !initResponse.amount) {
+        throw new Error('Payment initialization failed. Please try again.');
+      }
+
       const paymentResult = await openPaystackCheckout({
         publicKey: initResponse.publicKey,
         reference: initResponse.reference,

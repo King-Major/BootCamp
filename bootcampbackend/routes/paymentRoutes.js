@@ -122,6 +122,13 @@ router.post('/initialize', async (req, res) => {
       body: JSON.stringify(payload),
     });
 
+    if (!PAYSTACK_PUBLIC_KEY) {
+      return res.status(500).json({
+        success: false,
+        message: 'Paystack public key is not configured on the server.',
+      });
+    }
+
     return res.status(200).json({
       success: true,
       reference: paystackResponse.data.reference,

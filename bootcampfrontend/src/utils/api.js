@@ -21,10 +21,24 @@ async function apiFetch(path, options = {}) {
     ...options,
   });
 
-  const body = await response.json().catch(() => null);
+  const rawText = await response.text();
+  let body = null;
+
+  if (rawText) {
+    try {
+      body = JSON.parse(rawText);
+    } catch {
+      body = rawText;
+    }
+  }
+
   if (!response.ok) {
-    const message = body?.message || `Request failed with status ${response.status}`;
+    const message = body?.message || (typeof body === 'string' ? body : `Request failed with status ${response.status}`);
     throw new Error(message);
+  }
+
+  if (body === null) {
+    throw new Error('The server responded without data. Please try again.');
   }
 
   return body;
