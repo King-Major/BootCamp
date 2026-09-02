@@ -477,7 +477,13 @@ const useScrollProgress = () => {
 };
 
 const useCountdown = () => {
-  const target = useRef(Date.now() + 1000 * 60 * 60 * 24 * 4 + 1000 * 60 * 60 * 7).current;
+  // Offset: 1 day (24h) + 19 hours = 43 hours total
+  const target = useRef(
+    Date.now() + 
+    1000 * 60 * 60 * 24 * 1 + // 1 day
+    1000 * 60 * 60 * 19       // 19 hours
+  ).current;
+
   const [left, setLeft] = useState(target - Date.now());
 
   useEffect(() => {
