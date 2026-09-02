@@ -213,8 +213,8 @@ const COURSES = [
     glow: "52,211,153",
   },
   {
-    title: "Mobile App Development with Glide",
-    short: "App Dev with Glide",
+    title: "Mobile App Development",
+    short: "Mobile App Development",
     desc: "Turn spreadsheets into real, working mobile apps — no traditional coding required.",
     Icon: Smartphone,
     color: "#38BDF8",
@@ -253,7 +253,7 @@ const NAV_LINKS = [
   { label: "Register", id: "register" },
 ];
 
-const WAYPOINTS = ["KSUSTA", "Origin", "True North", "Routes", "Navigators", "Dispatches", "The World"];
+const WAYPOINTS = ["AFUSTA", "Origin", "True North", "Routes", "Navigators", "Dispatches", "The World"];
 
 /* ------------------------------------------------------------------ */
 /*  Crown Mark (decorative glyph, used sparingly)                     */
@@ -686,19 +686,20 @@ const RegistrationModal = ({ open, onClose }) => {
         email: email.trim(),
         amount: initResponse.amount,
         onClose: () => {
-          setError('Payment was not completed. Please try again.');
+          setError('Payment cancelled. Your seat is not yet reserved. Try again to complete payment.');
           setStage('form');
         },
       });
 
       const verifyResponse = await verifyPayment(paymentResult.reference || initResponse.reference);
       if (!verifyResponse?.verified) {
-        throw new Error('Payment verification failed.');
+        throw new Error('Payment verification failed. Please try again.');
       }
 
       setStage("success");
     } catch (err) {
-      setError(err.message || "Something went wrong. Try again.");
+      const message = err.message || "Something went wrong. Try again.";
+      setError(message);
       setStage("form");
     }
   };
@@ -760,12 +761,12 @@ const RegistrationModal = ({ open, onClose }) => {
               />
             </label>
             <label className="block mb-4">
-              <span className="kc-mono block text-[10px] text-[#7A6C9C] uppercase mb-2">KSUSTA email</span>
+              <span className="kc-mono block text-[10px] text-[#7A6C9C] uppercase mb-2">AFUSTA email</span>
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 type="email"
-                placeholder="you@ksusta.edu.ng"
+                placeholder="you@afusta.edu.ng"
                 className="w-full bg-[#060512]/50 border border-[#2A1F47] focus:border-[#8B5CF6] outline-none px-4 py-3 text-sm rounded-sm transition-all"
               />
             </label>
@@ -914,7 +915,7 @@ const StickyMobileBar = ({ visible, onRegister }) => (
 /* ------------------------------------------------------------------ */
 /*  Header / Navbar                                                   */
 /* ------------------------------------------------------------------ */
-const Header = ({ bearing, onRegister, menuOpen, setMenuOpen, onNavigate }) => (
+const Header = ({ onRegister, menuOpen, setMenuOpen, onNavigate }) => (
   <header className="fixed top-0 inset-x-0 z-30 border-b border-white/5 backdrop-blur-md bg-[#060512]/75">
     <div className="max-w-6xl mx-auto px-5 md:px-10 lg:pl-24 h-16 flex items-center justify-between">
       <button onClick={() => onNavigate("top")} className="kc-tap">
@@ -935,9 +936,7 @@ const Header = ({ bearing, onRegister, menuOpen, setMenuOpen, onNavigate }) => (
       </nav>
 
       <div className="flex items-center gap-4">
-        <span className="hidden lg:inline kc-mono text-[10px] text-[#5C4F80]">
-          BEARING {String(bearing).padStart(3, "0")}°
-        </span>
+        <BearingDisplay />
         <button
           onClick={onRegister}
           className="hidden sm:inline-block kc-mono text-[10px] uppercase px-4 py-2 border border-[#2A1F47] text-[#C08A45] hover:bg-[#C08A45]/10 rounded-sm transition-colors kc-tap"
@@ -956,6 +955,20 @@ const Header = ({ bearing, onRegister, menuOpen, setMenuOpen, onNavigate }) => (
     </div>
   </header>
 );
+
+/* ------------------------------------------------------------------ */
+/*  Bearing Display — Independently updates on scroll                 */
+/* ------------------------------------------------------------------ */
+const BearingDisplay = () => {
+  const pct = useScrollProgress();
+  const bearing = Math.round(pct * 359);
+  
+  return (
+    <span className="hidden lg:inline kc-mono text-[10px] text-[#5C4F80]">
+      BEARING {String(bearing).padStart(3, "0")}°
+    </span>
+  );
+};
 
 /* ------------------------------------------------------------------ */
 /*  Hero                                                               */
@@ -978,7 +991,7 @@ const Hero = ({ heroIn, onRegister, onNavigate }) => (
         <Reveal delay={80}>
           <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-[#C08A45]/30 bg-[#C08A45]/10 mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-[#C08A45] animate-pulse" />
-            <span className="kc-mono text-[10px] text-[#E6B46C] uppercase tracking-widest">Flagship Bootcamp · KSUSTA</span>
+            <span className="kc-mono text-[10px] text-[#E6B46C] uppercase tracking-widest">Flagship Bootcamp · AFUSTA</span>
           </div>
         </Reveal>
         <h1 className="kc-display text-5xl md:text-7xl lg:text-[80px] leading-[1.05] mb-6">
@@ -995,7 +1008,7 @@ const Hero = ({ heroIn, onRegister, onNavigate }) => (
         </h1>
         <Reveal delay={780}>
           <p className="text-base md:text-lg text-[#B7A9CF] leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0">
-            King&rsquo;s Code Academy is KSUSTA&rsquo;s flagship bootcamp — six focused routes, mapped from a
+            King&rsquo;s Code Academy is AFUSTA&rsquo;s flagship bootcamp — six focused routes, mapped from a
             single origin point to skills you can actually sell.
           </p>
         </Reveal>
@@ -1079,7 +1092,7 @@ const Hero = ({ heroIn, onRegister, onNavigate }) => (
             <circle cx="180" cy="40" r="3" fill="#8B5CF6" />
             <line x1="180" y1="43" x2="180" y2="60" stroke="#8B5CF6" strokeWidth="1" />
             <text x="180" y="32" textAnchor="middle" fontSize="9" letterSpacing="0.1em" fill="#C9A7FF" fontFamily="monospace">NORTH</text>
-            <text x="180" y="300" textAnchor="middle" fontSize="10" letterSpacing="0.2em" fill="#E6B46C" fontFamily="monospace">KSUSTA SECURE NODE</text>
+            <text x="180" y="300" textAnchor="middle" fontSize="10" letterSpacing="0.2em" fill="#E6B46C" fontFamily="monospace">AFUSTA SECURE NODE</text>
           </g>
         </svg>
 
@@ -1103,7 +1116,7 @@ const IntroSections = () => (
         <Reveal><Waypoint index={1} label="Who can board" title="Who this is" accent="for" /></Reveal>
         <Reveal delay={120}>
           <p className="text-lg text-[#B7A9CF] leading-relaxed max-w-xl">
-            Open exclusively to KSUSTA students, regardless of department or current experience.
+            Open exclusively to AFUSTA students, regardless of department or current experience.
             Whether you&rsquo;ve never written a line of code or already tinker on the side, the
             academy meets you where you are and takes you to a level you can actually use —
             to build, to freelance, to earn.
@@ -1403,7 +1416,7 @@ const Footer = ({ onNavigate }) => (
             <BrandMark size={40} wordmarkClass="text-[11px]" />
           </div>
           <p className="text-sm text-[#8A7BA8] leading-relaxed max-w-xs mb-5">
-            KSUSTA&rsquo;s flagship bootcamp — mapping students from a single origin point to
+            AFUSTA&rsquo;s flagship bootcamp — mapping students from a single origin point to
             scalable, sellable digital skills.
           </p>
           <div className="flex items-center gap-3">
@@ -1459,7 +1472,7 @@ const Footer = ({ onNavigate }) => (
               <Phone size={14} className="text-[#C08A45] shrink-0" /> +234 000 000 0000
             </li>
             <li className="flex items-center gap-2 justify-center sm:justify-start">
-              <MapPin size={14} className="text-[#C08A45] shrink-0" /> KSUSTA Campus
+              <MapPin size={14} className="text-[#C08A45] shrink-0" /> AFUSTA Campus
             </li>
           </ul>
         </div>
@@ -1467,13 +1480,38 @@ const Footer = ({ onNavigate }) => (
 
       <div className="pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
         <p className="kc-mono text-[10px] uppercase text-[#5C4F80] tracking-widest text-center sm:text-left">
-          © {new Date().getFullYear()} King&rsquo;s Code Academy — KSUSTA
+          © {new Date().getFullYear()} King&rsquo;s Code Academy — AFUSTA
         </p>
         <span className="kc-mono text-[10px] uppercase text-[#5C4F80] tracking-widest">Waypoint 07 — The World</span>
       </div>
     </div>
   </footer>
 );
+
+/* ------------------------------------------------------------------ */
+/*  Scroll Progress Wrapper — Isolates scroll updates                 */
+/* ------------------------------------------------------------------ */
+const ScrollProgressWrapper = ({ loading, menuOpen, onRegister }) => {
+  const pct = useScrollProgress();
+  const showStickyBar = !loading && pct > 0.045 && pct < 0.97 && !menuOpen;
+  
+  return (
+    <>
+      <RouteLine pct={pct} />
+      <MiniKing pct={pct} ready={!loading} />
+      <StickyMobileBar visible={showStickyBar} onRegister={onRegister} />
+    </>
+  );
+};
+
+/* ------------------------------------------------------------------ */
+/*  Countdown Wrapper — Isolates countdown timer updates              */
+/* ------------------------------------------------------------------ */
+const CountdownWrapper = ({ ctaRef, onRegister }) => {
+  const ctdown = useCountdown();
+  
+  return <FinalCta ctaRef={ctaRef} ctdown={ctdown} onRegister={onRegister} />;
+};
 
 /* ------------------------------------------------------------------ */
 /*  Main Component                                                    */
@@ -1483,10 +1521,7 @@ const KingsCodeAcademy = () => {
   const [heroIn, setHeroIn] = useState(false);
   const [showRegistration, setShowRegistration] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const pct = useScrollProgress();
-  const ctdown = useCountdown();
   const ctaRef = useRef(null);
-  const bearing = Math.round(pct * 359);
 
   const handleLoadingDone = useCallback(() => {
     setLoading(false);
@@ -1508,14 +1543,13 @@ const KingsCodeAcademy = () => {
     setShowRegistration(true);
   }, []);
 
-  const showStickyBar = !loading && pct > 0.045 && pct < 0.97 && !menuOpen;
-
   return (
     <div className="kc-root relative">
       <GlobalStyle />
       {loading && <Loader onDone={handleLoadingDone} />}
-      <RouteLine pct={pct} />
-      <MiniKing pct={pct} ready={!loading} />
+      
+      {/* Isolated scroll progress components */}
+      <ScrollProgressWrapper loading={loading} menuOpen={menuOpen} onRegister={openRegistration} />
 
       {/* Background Grid */}
       <div className="kc-grid-bg" />
@@ -1525,7 +1559,6 @@ const KingsCodeAcademy = () => {
       </div>
 
       <Header
-        bearing={bearing}
         onRegister={openRegistration}
         menuOpen={menuOpen}
         setMenuOpen={setMenuOpen}
@@ -1538,10 +1571,11 @@ const KingsCodeAcademy = () => {
       <CoursesSection />
       <NavigatorsSection />
       <TestimonialsSection />
-      <FinalCta ctaRef={ctaRef} ctdown={ctdown} onRegister={openRegistration} />
+      
+      {/* Isolated countdown timer component */}
+      <CountdownWrapper ctaRef={ctaRef} onRegister={openRegistration} />
+      
       <Footer onNavigate={scrollToId} />
-
-      <StickyMobileBar visible={showStickyBar} onRegister={openRegistration} />
       <RegistrationModal open={showRegistration} onClose={() => setShowRegistration(false)} />
     </div>
   );

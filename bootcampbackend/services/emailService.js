@@ -1,47 +1,40 @@
 // services/emailService.js
 
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-// Create transporter
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+// Initialize Resend with API key
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// --- START OF CHANGES ---
-
-// The function now accepts a buffer (qrCodeBuffer) instead of a string
+// The function now accepts a buffer (qrCodeBuffer) and sends via Resend
 const sendConfirmationEmail = async (email, name, qrCodeBuffer) => {
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: 'Bootcamp Registration Confirmation',
-    // 1. Update the image source to use a Content-ID (cid)
-    html: `
-      <h2>Registration Confirmed!</h2>
-      <p>Hi ${name},</p>
-      <p>We Thank you for registering for our bootcamp. Your registration has been confirmed.</p>
-      <p><strong>Time:</strong> 3 PM on Thursday<br>
-      <strong>Venue:</strong> ICT Department, Faculty of Engineering.</p>
-      <p>Please save the QR code below - you'll need it for check-in:</p>
-      <img src="cid:qrcode" alt="Your QR Code" />
-      <p>Best regards,<br>King's Code Academy Team</p>
-    `,
-    // 2. Add an attachments array with the QR code buffer
-    attachments: [
-      {
-        filename: 'qrcode.png',
-        content: qrCodeBuffer,
-        cid: 'qrcode' // This CID must match the one in the img src
-      }
-    ]
-  };
-  // --- END OF CHANGES ---
+  try {
+    const qrCodeBase64 = qrCodeBuffer.toString('base64');
+    
+    const response = await resend.emails.send({
+      from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
+      to: email,
+      subject: 'Bootcamp Registration Confirmation',
+      html: `
+        <h2>Registration Confirmed!</h2>
+        <p>Hi ${name},</p>
+        <p>Thank you for registering for our bootcamp. Your registration has been confirmed.</p>
+        <p><strong>Time:</strong> 3 PM on Friday, 4th September<br>
+        <strong>Venue:</strong> ICT Department, Faculty of Engineering.</p>
+        <p>Please save the QR code below - you'll need it for check-in:</p>
+        <img src="data:image/png;base64,${qrCodeBase64}" alt="Your QR Code" style="max-width: 300px;" />
+        <p>Best regards,<br>King's Code Academy Team</p>
+      `,
+    });
 
-  return await transporter.sendMail(mailOptions);
+    if (response.error) {
+      throw new Error(`Resend error: ${response.error.message}`);
+    }
+
+    return response;
+  } catch (error) {
+    console.error('Error sending email via Resend:', error);
+    throw error;
+  }
 };
 
 module.exports = { sendConfirmationEmail };

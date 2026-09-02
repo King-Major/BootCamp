@@ -14,7 +14,7 @@ const PAYSTACK_CALLBACK_URL = process.env.PAYSTACK_CALLBACK_URL;
 const AVAILABLE_COURSES = [
   'Web Development Basics',
   'Blockchain & Crypto Basics',
-  'Mobile App Development with Glide',
+  'Mobile App Development',
   'Mobile Photography Basics',
   'Virtual Assistance Basics',
   'Content Creation Basics',
@@ -190,17 +190,49 @@ router.post('/verify', async (req, res) => {
       });
     }
 
+    // Parse dateOfBirth safely - handle both "YYYY-MM-DD" and "YYYY-MM-DDTHH:mm:ss.sssZ" formats
+    let parsedDateOfBirth;
+    try {
+      // If the date string includes time, use it as-is; otherwise assume UTC to avoid timezone issues
+      const dateStr = metadata.dateOfBirth;
+      if (dateStr.includes('T')) {
+        parsedDateOfBirth = new Date(dateStr);
+      } else {
+        // For "YYYY-MM-DD" format, parse as UTC to avoid timezone shifts
+        parsedDateOfBirth = new Date(dateStr + 'T00:00:00Z');
+      }
+      
+      if (isNaN(parsedDateOfBirth.getTime())) {
+        throw new Error('Invalid date value');
+      }
+    } catch (dateError) {
+      console.error('Date parsing error:', metadata.dateOfBirth, dateError);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date of birth format. Please use YYYY-MM-DD format.',
+      });
+    }
+
+    // Parse paidAt safely - handle missing or invalid timestamps from Paystack
+    let paidAtDate = new Date();
+    if (transaction.paid_at && typeof transaction.paid_at === 'number') {
+      const paidAtFromPaystack = new Date(transaction.paid_at * 1000);
+      if (!isNaN(paidAtFromPaystack.getTime())) {
+        paidAtDate = paidAtFromPaystack;
+      }
+    }
+
     const registration = new Registration({
       firstName: metadata.firstName,
       middleName: metadata.middleName,
       lastName: metadata.lastName,
       email,
-      dateOfBirth: new Date(metadata.dateOfBirth),
+      dateOfBirth: parsedDateOfBirth,
       course: metadata.course,
       hasLaptop: parseBoolean(metadata.hasLaptop),
       paymentReference: reference,
       amountPaid: transaction.amount,
-      paidAt: transaction.paid_at ? new Date(transaction.paid_at * 1000) : new Date(),
+      paidAt: paidAtDate,
     });
 
     const savedRegistration = await registration.save();
@@ -218,11 +250,9 @@ router.post('/verify', async (req, res) => {
     savedRegistration.qrCode = `data:image/png;base64,${qrCodeBuffer.toString('base64')}`;
     await savedRegistration.save();
 
-    try {
-      await sendConfirmationEmail(savedRegistration.email, fullName, qrCodeBuffer);
-    } catch (emailError) {
-      console.error('Confirmation email error:', emailError);
-    }
+    // Send email asynchronously (fire-and-forget) to avoid blocking the response
+    sendConfirmationEmail(savedRegistration.email, fullName, qrCodeBuffer)
+      .catch(emailError => console.error('Confirmation email error:', emailError));
 
     return res.status(201).json({
       success: true,

@@ -27,6 +27,7 @@ app.get('/', (req, res) => {
   res.send('Bootcamp Registration API is running...');
 });
 
+// Registration only available through payment flow
 app.use('/api/payment', paymentRoutes);
 
 // Start Server
