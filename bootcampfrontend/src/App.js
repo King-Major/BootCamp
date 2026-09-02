@@ -940,7 +940,7 @@ const MobileMenu = ({ open, onClose, onNavigate, onRegister }) => {
             Claim Seat — ₦1,000 <ArrowRight size={16} />
           </button>
           <p className="text-center kc-mono text-[9px] text-[#5C4F80] uppercase mt-5 tracking-widest">
-            13 of 40 seats remaining
+            Few seats left
           </p>
         </div>
       </div>
@@ -998,7 +998,7 @@ const Header = ({ onRegister, menuOpen, setMenuOpen, onNavigate }) => (
           onClick={onRegister}
           className="hidden sm:inline-block kc-mono text-[10px] uppercase px-4 py-2 border border-[#2A1F47] text-[#C08A45] hover:bg-[#C08A45]/10 rounded-sm transition-colors kc-tap"
         >
-          13 seats left
+          Few seats left
         </button>
         <button
           onClick={() => setMenuOpen(!menuOpen)}
@@ -1474,7 +1474,7 @@ const FinalCta = ({ ctaRef, ctdown, onRegister }) => (
           <ArrowRight className="w-4 h-4" />
         </button>
         <p className="text-[11px] text-[#7A6C9C] mt-5 kc-mono uppercase tracking-widest">
-          Only 13 of 40 seats remaining
+          Few seats left
         </p>
       </Reveal>
     </div>
