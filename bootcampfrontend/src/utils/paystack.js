@@ -40,10 +40,10 @@ export const openPaystackCheckout = async ({ publicKey, reference, email, amount
       return reject(new Error('Paystack checkout is unavailable.'));
     }
 
-    // Set a timeout to fail gracefully if Paystack doesn't respond
+    // Give Paystack more time on slower networks and mobile connections before failing.
     const timeoutId = setTimeout(() => {
       reject(new Error('The payment window took too long to load. Please try again. If the problem persists, check your internet connection.'));
-    }, 10000); // 10 second timeout
+    }, 50000); // 30 second timeout
 
     const popup = PaystackPop.setup({
       key: publicKey,
