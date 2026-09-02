@@ -257,9 +257,13 @@ router.post('/verify', async (req, res) => {
     savedRegistration.qrCode = `data:image/png;base64,${qrCodeBuffer.toString('base64')}`;
     await savedRegistration.save();
 
-    // Send email asynchronously (fire-and-forget) to avoid blocking the response
-    sendConfirmationEmail(savedRegistration.email, fullName, qrCodeBuffer)
-      .catch(emailError => console.error('Confirmation email error:', emailError));
+    let emailSent = false;
+    try {
+      await sendConfirmationEmail(savedRegistration.email, fullName, qrCodeBuffer);
+      emailSent = true;
+    } catch (emailError) {
+      console.error('Confirmation email error:', emailError);
+    }
 
     return res.status(201).json({
       success: true,
@@ -267,6 +271,7 @@ router.post('/verify', async (req, res) => {
       registrationId: savedRegistration._id,
       email: savedRegistration.email,
       course: savedRegistration.course,
+      emailSent,
     });
   } catch (error) {
     console.error('Paystack verify error:', error);
