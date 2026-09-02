@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   ArrowRight, X, Check, Clock, Crown, Code, Boxes, Smartphone, Camera,
-  Headphones, Video, Menu, Instagram, Twitter, Facebook, Mail, Phone, MapPin
+  Headphones, Video, Shield, Menu, Instagram, Twitter, Facebook, Mail, Phone, MapPin
 } from "lucide-react";
 import { initializePayment, verifyPayment } from "./utils/api";
 import { openPaystackCheckout } from "./utils/paystack";
@@ -211,6 +211,14 @@ const COURSES = [
     Icon: Boxes,
     color: "#34D399",
     glow: "52,211,153",
+  },
+  {
+    title: "Cyber Security Basics",
+    short: "Cyber Security",
+    desc: "Core security principles, threat awareness and practical habits for protecting digital systems.",
+    Icon: Shield,
+    color: "#A78BFA",
+    glow: "167,139,250",
   },
   {
     title: "Mobile App Development",
@@ -1490,12 +1498,16 @@ const Footer = ({ onNavigate }) => (
             scalable, sellable digital skills.
           </p>
           <div className="flex items-center gap-3">
-            {[Instagram, Twitter, Facebook].map((Icon, i) => (
+            {[
+              { Icon: Twitter, href: "https://x.com/kings_code_", label: "King's Code on X" },
+              { Icon: Facebook, href: "https://www.facebook.com/share/18pYr9uTAT/", label: "King's Code on Facebook" },
+            ].map(({ Icon, href, label }, i) => (
               <a
                 key={i}
-                href="#"
-                onClick={(e) => e.preventDefault()}
-                aria-label="Social link placeholder"
+                href={href}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={label}
                 className="w-9 h-9 rounded-full border border-[#2A1F47] flex items-center justify-center text-[#7A6C9C] hover:text-[#E6B46C] hover:border-[#C08A45]/50 transition-colors kc-tap"
               >
                 <Icon size={15} />
@@ -1536,10 +1548,10 @@ const Footer = ({ onNavigate }) => (
           <p className="kc-mono text-[10px] uppercase text-[#7A6C9C] tracking-widest mb-4">Reach the Academy</p>
           <ul className="space-y-3 text-sm text-[#B7A9CF]">
             <li className="flex items-center gap-2 justify-center sm:justify-start">
-              <Mail size={14} className="text-[#C08A45] shrink-0" /> hello@kingscode.academy
+              <Mail size={14} className="text-[#C08A45] shrink-0" /> contact@kingscodeacademy.com
             </li>
             <li className="flex items-center gap-2 justify-center sm:justify-start">
-              <Phone size={14} className="text-[#C08A45] shrink-0" /> +234 000 000 0000
+              <Phone size={14} className="text-[#C08A45] shrink-0" /> +234 906 155 414
             </li>
             <li className="flex items-center gap-2 justify-center sm:justify-start">
               <MapPin size={14} className="text-[#C08A45] shrink-0" /> AFUSTA Campus

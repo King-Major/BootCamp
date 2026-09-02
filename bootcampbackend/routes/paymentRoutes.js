@@ -14,6 +14,7 @@ const PAYSTACK_CALLBACK_URL = process.env.PAYSTACK_CALLBACK_URL;
 const AVAILABLE_COURSES = [
   'Web Development Basics',
   'Blockchain & Crypto Basics',
+  'Cyber Security Basics',
   'Mobile App Development',
   'Mobile Photography Basics',
   'Virtual Assistance Basics',

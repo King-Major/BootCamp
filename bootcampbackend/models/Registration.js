@@ -36,6 +36,7 @@ const registrationSchema = new mongoose.Schema({
     enum: [
       'Web Development Basics',
       'Blockchain & Crypto Basics',
+      'Cyber Security Basics',
       'Mobile App Development with Glide',
       'Mobile Photography Basics',
       'Virtual Assistance Basics',
