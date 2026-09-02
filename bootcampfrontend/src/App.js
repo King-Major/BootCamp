@@ -253,6 +253,51 @@ const NAV_LINKS = [
   { label: "Register", id: "register" },
 ];
 
+const FACILITATORS = [
+  {
+    name: "Feyishola Obianke",
+    role: "Mobile Development",
+    image: "/facilitators/feyishola-obianke.webp",
+    accent: "#8B5CF6",
+  },
+  {
+    name: "Job Waziri",
+    role: "Cyber Security",
+    image: "/facilitators/job-waziri.webp",
+    accent: "#34D399",
+  },
+  {
+    name: "Mazi Titled Chief, Ipay BTC",
+    role: "Crypto Currency",
+    image: "/facilitators/mazi-titled-chief.webp",
+    accent: "#F472B6",
+  },
+  {
+    name: "Clarity Mercy Adikwu",
+    role: "Virtual Assistance",
+    image: "/facilitators/clarity-mercy-adikwu.webp",
+    accent: "#C08A45",
+  },
+  {
+    name: "Ebenezer Magaji AKA Deluxe Photography",
+    role: "Mobile Photography",
+    image: "/facilitators/ebenezer-magaji.webp",
+    accent: "#F59E0B",
+  },
+  {
+    name: "Aghedo Oseiwe Promise",
+    role: "Web Development",
+    image: "/facilitators/aghedo-oseiwe-promise.webp",
+    accent: "#38BDF8",
+  },
+  {
+    name: "Paul Albright Obianujunwa",
+    role: "Content Creation",
+    image: "/facilitators/uju.webp",
+    accent: "#2DD4BF",
+  },
+];
+
 const WAYPOINTS = ["AFUSTA", "Origin", "True North", "Routes", "Navigators", "Dispatches", "The World"];
 
 /* ------------------------------------------------------------------ */
@@ -907,7 +952,7 @@ const StickyMobileBar = ({ visible, onRegister }) => (
     <div className="flex items-center justify-between gap-3 bg-[#0C0820]/95 backdrop-blur-xl border border-[#2A1F47] rounded-md px-4 py-3 shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
       <div>
         <p className="kc-display text-lg text-white leading-none">₦1,000</p>
-        <p className="kc-mono text-[8px] text-[#C08A45] uppercase tracking-widest mt-1">13 seats left</p>
+        <p className="kc-mono text-[8px] text-[#C08A45] uppercase tracking-widest mt-1">Few seats left</p>
       </div>
       <button onClick={onRegister} className="kc-btn-primary py-3 px-5 text-[11px] kc-tap">
         Claim Seat <ArrowRight size={14} />
@@ -1231,30 +1276,51 @@ const CoursesSection = () => {
 /* ------------------------------------------------------------------ */
 /*  Navigator (Tutor) Card                                            */
 /* ------------------------------------------------------------------ */
-const NavigatorCard = ({ c }) => {
-  const { Icon } = c;
+const NavigatorCard = ({ facilitator }) => {
+  const initials = facilitator.name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "KC";
+
   return (
-    <div className="h-full bg-[#090718] border border-[#2A1F47] rounded-md p-7 md:p-8 text-center kc-tap">
-      <div className="relative w-24 h-24 mx-auto mb-5">
-        <div
-          className="absolute inset-0 rounded-full border border-dashed opacity-50"
-          style={{ borderColor: c.color, animation: "kc-pulse-ring 4s ease-in-out infinite" }}
-        />
-        <div
-          className="absolute inset-2 rounded-full flex items-center justify-center"
-          style={{ background: `rgba(${c.glow},0.12)`, border: `1px solid rgba(${c.glow},0.35)` }}
-        >
-          <Icon size={26} style={{ color: c.color }} />
+    <div className="h-full bg-[#090718] border border-[#2A1F47] rounded-xl p-4 md:p-5 text-left kc-tap shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+      <div className="relative overflow-hidden rounded-xl border border-[#2A1F47] bg-[#0F0A1B] mb-4">
+        {facilitator.image ? (
+          <img
+            src={facilitator.image}
+            alt={facilitator.name}
+            className="h-72 w-full object-cover object-center"
+          />
+        ) : (
+          <div
+            className="h-72 w-full flex items-center justify-center"
+            style={{
+              background: `linear-gradient(135deg, ${facilitator.accent}15, rgba(255,255,255,0.04))`,
+              color: facilitator.accent,
+            }}
+          >
+            <span className="kc-display text-5xl italic">{initials}</span>
+          </div>
+        )}
+
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#090718] via-[#090718cc] to-transparent px-4 py-3">
+          <p className="kc-mono text-[9px] uppercase tracking-[0.22em] text-[#D9C7A2]">Facilitator</p>
         </div>
       </div>
-      <p className="kc-mono text-[9px] uppercase tracking-widest mb-2" style={{ color: c.color }}>
-        Route Navigator
-      </p>
-      <h3 className="kc-display text-xl text-white mb-1 italic text-[#B7A9CF]">Facilitator TBA</h3>
-      <p className="text-xs text-[#8A7BA8] mb-5">{c.short}</p>
-      <span className="inline-block text-[9px] kc-mono uppercase tracking-widest px-3 py-1.5 rounded-full border border-white/10 text-[#5C4F80]">
-        Photo &amp; bio coming soon
-      </span>
+
+      <div className="space-y-2">
+        <h3 className="kc-display text-xl md:text-2xl text-[#F5F0FF] italic leading-tight">
+          {facilitator.name}
+        </h3>
+        <p
+          className="kc-mono text-[9px] uppercase tracking-[0.22em]"
+          style={{ color: facilitator.accent }}
+        >
+          {facilitator.role}
+        </p>
+      </div>
     </div>
   );
 };
@@ -1263,7 +1329,7 @@ const NavigatorCard = ({ c }) => {
 /*  Navigators Section (tutors)                                       */
 /* ------------------------------------------------------------------ */
 const NavigatorsSection = () => {
-  const { containerRef, active, onScroll } = useCarouselDots(COURSES.length);
+  const { containerRef, active, onScroll } = useCarouselDots(FACILITATORS.length);
 
   return (
     <section id="navigators" className="relative py-24 md:py-28 border-t border-white/5 z-10 bg-[linear-gradient(180deg,transparent_0%,rgba(192,138,69,0.03)_50%,transparent_100%)]">
@@ -1271,8 +1337,8 @@ const NavigatorsSection = () => {
         <Reveal><Waypoint index={4} label="Your guides" title="Meet your" accent="navigators" /></Reveal>
         <Reveal delay={100}>
           <p className="text-[#8A7BA8] text-sm md:text-base max-w-xl mt-2">
-            Every route is led by a dedicated facilitator — official profiles and photos are being
-            finalized ahead of cohort start.
+            Real experts. Practical lessons. A facilitator team built to keep every route moving.
+            Four portraits are live now, and the rest will be updated as new headshots arrive.
           </p>
         </Reveal>
       </div>
@@ -1284,20 +1350,20 @@ const NavigatorsSection = () => {
           onScroll={onScroll}
           className="flex gap-4 overflow-x-auto snap-x snap-mandatory px-6 pb-2 kc-scrollbar-none"
         >
-          {COURSES.map((c, i) => (
-            <Reveal key={c.title} delay={i * 60} variant="scale" className="w-[72vw] shrink-0 snap-center">
-              <NavigatorCard c={c} />
+          {FACILITATORS.map((facilitator, i) => (
+            <Reveal key={facilitator.name} delay={i * 60} variant="scale" className="w-[80vw] shrink-0 snap-center">
+              <NavigatorCard facilitator={facilitator} />
             </Reveal>
           ))}
         </div>
         <div className="flex justify-center gap-2 mt-6">
-          {COURSES.map((_, i) => (
+          {FACILITATORS.map((_, i) => (
             <span
               key={i}
               className="h-1.5 rounded-full transition-all duration-300"
               style={{
                 width: active === i ? 22 : 6,
-                background: active === i ? COURSES[i].color : "#2A1F47",
+                background: active === i ? FACILITATORS[i].accent : "#2A1F47",
               }}
             />
           ))}
@@ -1306,10 +1372,10 @@ const NavigatorsSection = () => {
 
       {/* Desktop / tablet: static grid */}
       <div className="hidden md:block max-w-6xl mx-auto px-10 lg:pl-24">
-        <div className="grid md:grid-cols-3 gap-6">
-          {COURSES.map((c, i) => (
-            <Reveal key={c.title} delay={i * 80}>
-              <NavigatorCard c={c} />
+        <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {FACILITATORS.map((facilitator, i) => (
+            <Reveal key={facilitator.name} delay={i * 80}>
+              <NavigatorCard facilitator={facilitator} />
             </Reveal>
           ))}
         </div>
