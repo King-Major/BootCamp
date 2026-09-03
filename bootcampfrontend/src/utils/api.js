@@ -53,3 +53,20 @@ export const verifyPayment = (reference) => apiFetch('/api/payment/verify', {
   method: 'POST',
   body: JSON.stringify({ reference }),
 });
+
+export const verifyPaymentWithRetry = async (reference, attempts = 5) => {
+  let lastError;
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      return await verifyPayment(reference);
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
+    }
+  }
+
+  throw lastError;
+};

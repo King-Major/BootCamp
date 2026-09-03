@@ -11,6 +11,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const app = express();
 
 // Middleware
+app.use('/api/payment/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
 app.use(cors()); // Enable CORS for frontend communication
 

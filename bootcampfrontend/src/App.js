@@ -3,7 +3,7 @@ import {
   ArrowRight, X, Check, Clock, Crown, Code, Boxes, Smartphone, Camera,
   Headphones, Video, Shield, Menu, Instagram, Twitter, Facebook, Mail, Phone, MapPin
 } from "lucide-react";
-import { initializePayment, verifyPayment } from "./utils/api";
+import { initializePayment, verifyPaymentWithRetry } from "./utils/api";
 import { openPaystackCheckout } from "./utils/paystack";
 
 /* ------------------------------------------------------------------ */
@@ -754,7 +754,7 @@ const RegistrationModal = ({ open, onClose }) => {
         },
       });
 
-      const verifyResponse = await verifyPayment(paymentResult.reference || initResponse.reference);
+      const verifyResponse = await verifyPaymentWithRetry(paymentResult.reference || initResponse.reference);
       if (!verifyResponse?.verified) {
         throw new Error('Payment verification failed. Please try again.');
       }
@@ -1610,6 +1610,18 @@ const KingsCodeAcademy = () => {
   const [showRegistration, setShowRegistration] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const ctaRef = useRef(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const reference = params.get('reference') || params.get('trxref');
+    if (!reference || params.get('status') === 'cancelled') return;
+
+    verifyPaymentWithRetry(reference)
+      .catch((error) => console.error('Paystack redirect verification failed:', error))
+      .finally(() => {
+        window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+      });
+  }, []);
 
   const handleLoadingDone = useCallback(() => {
     setLoading(false);

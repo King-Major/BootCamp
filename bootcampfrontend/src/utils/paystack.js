@@ -10,24 +10,34 @@ export const loadPaystack = () => {
       return resolve(window.PaystackPop);
     }
 
+    const timeoutId = setTimeout(() => {
+      reject(new Error('Paystack is taking too long to load. Please check your connection and try again.'));
+    }, 120000);
+
+    const resolvePaystack = () => {
+      clearTimeout(timeoutId);
+      if (window.PaystackPop) resolve(window.PaystackPop);
+      else reject(new Error('Paystack script loaded, but PaystackPop is unavailable.'));
+    };
+
     const existingScript = document.querySelector(`script[src="${PAYSTACK_SCRIPT_URL}"]`);
     if (existingScript) {
-      existingScript.addEventListener('load', () => {
-        if (window.PaystackPop) resolve(window.PaystackPop);
-        else reject(new Error('Paystack script loaded, but PaystackPop is unavailable.'));
-      });
-      existingScript.addEventListener('error', () => reject(new Error('Failed to load Paystack script.')));
+      existingScript.addEventListener('load', resolvePaystack, { once: true });
+      existingScript.addEventListener('error', () => {
+        clearTimeout(timeoutId);
+        reject(new Error('Failed to load Paystack script.'));
+      }, { once: true });
       return;
     }
 
     const script = document.createElement('script');
     script.src = PAYSTACK_SCRIPT_URL;
     script.async = true;
-    script.onload = () => {
-      if (window.PaystackPop) resolve(window.PaystackPop);
-      else reject(new Error('Paystack script loaded, but PaystackPop is unavailable.'));
+    script.onload = resolvePaystack;
+    script.onerror = () => {
+      clearTimeout(timeoutId);
+      reject(new Error('Failed to load Paystack script.'));
     };
-    script.onerror = () => reject(new Error('Failed to load Paystack script.'));
     document.body.appendChild(script);
   });
 };
@@ -43,7 +53,7 @@ export const openPaystackCheckout = async ({ publicKey, reference, email, amount
     // Give Paystack more time on slower networks and mobile connections before failing.
     const timeoutId = setTimeout(() => {
       reject(new Error('The payment window took too long to load. Please try again. If the problem persists, check your internet connection.'));
-    }, 50000);
+    }, 120000);
 
     const popup = PaystackPop.setup({
       key: publicKey,

@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const QRCode = require('qrcode');
 const Registration = require('../models/Registration');
 const { sendConfirmationEmail } = require('../services/emailService');
@@ -29,6 +30,62 @@ const getFullName = ({ firstName, middleName, lastName }) => {
   return [firstName, middleName, lastName].filter(Boolean).join(' ').trim();
 };
 
+const createRegistrationFromTransaction = async (transaction, reference) => {
+  const metadata = transaction.metadata || {};
+  const email = metadata.email;
+  const existingRegistration = await Registration.findOne({
+    $or: [{ email }, { paymentReference: reference }],
+  });
+
+  if (existingRegistration) {
+    return { registration: existingRegistration, emailSent: false, alreadyExists: true };
+  }
+
+  const dateValue = metadata.dateOfBirth;
+  const parsedDateOfBirth = new Date(dateValue.includes('T') ? dateValue : `${dateValue}T00:00:00Z`);
+  if (isNaN(parsedDateOfBirth.getTime())) {
+    throw new Error('Invalid date of birth format. Please use YYYY-MM-DD format.');
+  }
+
+  const paidAtDate = transaction.paid_at ? new Date(transaction.paid_at * 1000) : new Date();
+  const registration = new Registration({
+    firstName: metadata.firstName,
+    middleName: metadata.middleName,
+    lastName: metadata.lastName,
+    email,
+    dateOfBirth: parsedDateOfBirth,
+    course: metadata.course,
+    hasLaptop: parseBoolean(metadata.hasLaptop),
+    paymentReference: reference,
+    amountPaid: transaction.amount,
+    paidAt: isNaN(paidAtDate.getTime()) ? new Date() : paidAtDate,
+  });
+
+  const savedRegistration = await registration.save();
+  const fullName = getFullName(savedRegistration);
+  const qrData = `Registration ID: ${savedRegistration._id}\nName: ${fullName}\nCourse: ${savedRegistration.course}`;
+  const qrCodeBuffer = await QRCode.toBuffer(qrData, {
+    errorCorrectionLevel: 'M',
+    type: 'png',
+    quality: 0.92,
+    margin: 2,
+    width: 256,
+  });
+
+  savedRegistration.qrCode = `data:image/png;base64,${qrCodeBuffer.toString('base64')}`;
+  await savedRegistration.save();
+
+  let emailSent = false;
+  try {
+    await sendConfirmationEmail(savedRegistration.email, fullName, qrCodeBuffer);
+    emailSent = true;
+  } catch (emailError) {
+    console.error('Confirmation email error:', emailError);
+  }
+
+  return { registration: savedRegistration, emailSent, alreadyExists: false };
+};
+
 const paystackFetch = async (path, options = {}) => {
   if (!PAYSTACK_SECRET_KEY) {
     const err = new Error('Paystack secret key is not configured.');
@@ -54,36 +111,6 @@ const paystackFetch = async (path, options = {}) => {
   }
 
   return body;
-};
-
-const validateRegistrationPayload = ({ firstName, lastName, email, dateOfBirth, course, hasLaptop }) => {
-  const errors = [];
-
-  if (!firstName || typeof firstName !== 'string') {
-    errors.push('firstName is required');
-  }
-
-  if (!lastName || typeof lastName !== 'string') {
-    errors.push('lastName is required');
-  }
-
-  if (!email || typeof email !== 'string') {
-    errors.push('email is required');
-  }
-
-  if (!dateOfBirth || typeof dateOfBirth !== 'string') {
-    errors.push('dateOfBirth is required');
-  }
-
-  if (!course || typeof course !== 'string' || !AVAILABLE_COURSES.includes(course)) {
-    errors.push('course is required and must be a valid option');
-  }
-
-  if (hasLaptop === undefined || hasLaptop === null) {
-    errors.push('hasLaptop is required');
-  }
-
-  return errors;
 };
 
 router.post('/initialize', async (req, res) => {
@@ -184,95 +211,15 @@ router.post('/verify', async (req, res) => {
       });
     }
 
-    const email = metadata.email;
-    const existingRegistration = await Registration.findOne({
-      $or: [{ email }, { paymentReference: reference }],
-    });
-
-    if (existingRegistration) {
-      return res.status(200).json({
-        success: true,
-        verified: true,
-        message: 'Registration has already been confirmed for this payment or email.',
-        registrationId: existingRegistration._id,
-      });
-    }
-
-    // Parse dateOfBirth safely - handle both "YYYY-MM-DD" and "YYYY-MM-DDTHH:mm:ss.sssZ" formats
-    let parsedDateOfBirth;
-    try {
-      // If the date string includes time, use it as-is; otherwise assume UTC to avoid timezone issues
-      const dateStr = metadata.dateOfBirth;
-      if (dateStr.includes('T')) {
-        parsedDateOfBirth = new Date(dateStr);
-      } else {
-        // For "YYYY-MM-DD" format, parse as UTC to avoid timezone shifts
-        parsedDateOfBirth = new Date(dateStr + 'T00:00:00Z');
-      }
-      
-      if (isNaN(parsedDateOfBirth.getTime())) {
-        throw new Error('Invalid date value');
-      }
-    } catch (dateError) {
-      console.error('Date parsing error:', metadata.dateOfBirth, dateError);
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid date of birth format. Please use YYYY-MM-DD format.',
-      });
-    }
-
-    // Parse paidAt safely - handle missing or invalid timestamps from Paystack
-    let paidAtDate = new Date();
-    if (transaction.paid_at && typeof transaction.paid_at === 'number') {
-      const paidAtFromPaystack = new Date(transaction.paid_at * 1000);
-      if (!isNaN(paidAtFromPaystack.getTime())) {
-        paidAtDate = paidAtFromPaystack;
-      }
-    }
-
-    const registration = new Registration({
-      firstName: metadata.firstName,
-      middleName: metadata.middleName,
-      lastName: metadata.lastName,
-      email,
-      dateOfBirth: parsedDateOfBirth,
-      course: metadata.course,
-      hasLaptop: parseBoolean(metadata.hasLaptop),
-      paymentReference: reference,
-      amountPaid: transaction.amount,
-      paidAt: paidAtDate,
-    });
-
-    const savedRegistration = await registration.save();
-    const fullName = getFullName(savedRegistration);
-
-    const qrData = `Registration ID: ${savedRegistration._id}\nName: ${fullName}\nCourse: ${savedRegistration.course}`;
-    const qrCodeBuffer = await QRCode.toBuffer(qrData, {
-      errorCorrectionLevel: 'M',
-      type: 'png',
-      quality: 0.92,
-      margin: 2,
-      width: 256,
-    });
-
-    savedRegistration.qrCode = `data:image/png;base64,${qrCodeBuffer.toString('base64')}`;
-    await savedRegistration.save();
-
-    let emailSent = false;
-    try {
-      await sendConfirmationEmail(savedRegistration.email, fullName, qrCodeBuffer);
-      emailSent = true;
-    } catch (emailError) {
-      console.error('Confirmation email error:', emailError);
-    }
-
-    return res.status(201).json({
+    const result = await createRegistrationFromTransaction(transaction, reference);
+    const savedRegistration = result.registration;
+    return res.status(result.alreadyExists ? 200 : 201).json({
       success: true,
       verified: true,
       registrationId: savedRegistration._id,
       email: savedRegistration.email,
       course: savedRegistration.course,
-      emailSent,
+      emailSent: result.emailSent,
     });
   } catch (error) {
     console.error('Paystack verify error:', error);
@@ -281,6 +228,43 @@ router.post('/verify', async (req, res) => {
       message: error.message || 'Unable to verify payment',
       details: error.details || undefined,
     });
+  }
+});
+
+router.post('/webhook', async (req, res) => {
+  const signature = req.headers['x-paystack-signature'];
+  const rawBody = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body || {}));
+  const expectedSignature = crypto.createHmac('sha512', PAYSTACK_SECRET_KEY).update(rawBody).digest('hex');
+
+  const signatureBuffer = signature ? Buffer.from(signature) : null;
+  const expectedSignatureBuffer = Buffer.from(expectedSignature);
+  if (!signatureBuffer || signatureBuffer.length !== expectedSignatureBuffer.length || !crypto.timingSafeEqual(signatureBuffer, expectedSignatureBuffer)) {
+    return res.status(401).json({ success: false, message: 'Invalid webhook signature.' });
+  }
+
+  try {
+    const event = JSON.parse(rawBody.toString('utf8'));
+    if (event.event !== 'charge.success' || event.data?.status !== 'success') {
+      return res.status(200).json({ success: true, ignored: true });
+    }
+
+    const reference = event.data.reference;
+    const transactionResponse = await paystackFetch(`/transaction/verify/${encodeURIComponent(reference)}`);
+    const transaction = transactionResponse.data;
+    if (transaction.status !== 'success' || transaction.amount !== PAYSTACK_AMOUNT_KOBO) {
+      return res.status(400).json({ success: false, message: 'Webhook payment could not be verified.' });
+    }
+
+    const metadataErrors = validateRegistrationPayload(transaction.metadata || {});
+    if (metadataErrors.length) {
+      return res.status(400).json({ success: false, message: 'Webhook metadata is incomplete.', errors: metadataErrors });
+    }
+
+    const result = await createRegistrationFromTransaction(transaction, reference);
+    return res.status(200).json({ success: true, registrationId: result.registration._id, emailSent: result.emailSent });
+  } catch (error) {
+    console.error('Paystack webhook error:', error);
+    return res.status(500).json({ success: false, message: 'Webhook processing failed.' });
   }
 });
 

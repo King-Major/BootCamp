@@ -35,6 +35,12 @@ This repository contains a React frontend and an Express/MongoDB backend for a b
 5. When Paystack reports success, frontend calls `POST /api/payment/verify`.
 6. Backend verifies the transaction and saves the registration only after successful payment.
 
+## Paystack webhook setup
+Set Paystack's webhook URL to the public HTTPS address of:
+`https://your-api-domain.example/api/payment/webhook`
+
+The callback URL is a browser redirect, not a server-to-server notification. It should point to the public frontend URL (for example, `https://your-frontend-domain.example`), while the webhook URL must point to the backend. Paystack cannot reach `localhost` after deployment.
+
 ## Notes
 - No registration is stored in MongoDB until Paystack payment is confirmed.
 - The confirmation email is sent after the registration record is created.
