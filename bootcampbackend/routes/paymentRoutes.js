@@ -26,6 +26,21 @@ const parseBoolean = (value) => {
   return value === true || value === 'true' || value === '1' || value === 1;
 };
 
+const validateRegistrationPayload = ({ firstName, lastName, email, dateOfBirth, course, hasLaptop }) => {
+  const errors = [];
+
+  if (!firstName || typeof firstName !== 'string') errors.push('firstName is required');
+  if (!lastName || typeof lastName !== 'string') errors.push('lastName is required');
+  if (!email || typeof email !== 'string') errors.push('email is required');
+  if (!dateOfBirth || typeof dateOfBirth !== 'string') errors.push('dateOfBirth is required');
+  if (!course || typeof course !== 'string' || !AVAILABLE_COURSES.includes(course)) {
+    errors.push('course is required and must be a valid option');
+  }
+  if (hasLaptop === undefined || hasLaptop === null) errors.push('hasLaptop is required');
+
+  return errors;
+};
+
 const getFullName = ({ firstName, middleName, lastName }) => {
   return [firstName, middleName, lastName].filter(Boolean).join(' ').trim();
 };
