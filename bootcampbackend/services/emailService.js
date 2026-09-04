@@ -77,7 +77,7 @@ const sendConfirmationEmail = async (email, name, qrCodeBuffer) => {
                           <td style="padding:16px 18px;">
                             <div style="font-size:10px;color:#7A6C9C;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Session Details</div>
                             <div style="font-size:16px;color:#F5ECFF;line-height:1.7;">
-                              <span style="color:#C08A45;">Time:</span> 3:00 PM on Friday, 4th September<br>
+                              <span style="color:#C08A45;">Time:</span> 3:00 PM on Friday, 11th September<br>
                               <span style="color:#C08A45;">Venue:</span> ICT Department, Faculty of Engineering
                             </div>
                           </td>
