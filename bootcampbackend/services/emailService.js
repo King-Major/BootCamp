@@ -59,6 +59,7 @@ const sendConfirmationEmail = async (email, name, qrCodeBuffer) => {
                   </tr>
 
                   <tr>
+                  
                     <td style="padding:18px 24px 0;">
                       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:12px;">
                         <tr>
